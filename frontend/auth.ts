@@ -3,6 +3,8 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/prisma"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { comparePassword } from "@/lib/password-utils"
+import * as jwt from 'jsonwebtoken'
+import {JWT} from 'next-auth/jwt'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   useSecureCookies : process.env.NODE_ENV === "production",
@@ -30,7 +32,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
             const user = await prisma.user.findUnique({
                 where: {
-                    email: credentials.email
+                    email: credentials.email as string
                 }
             })
 
@@ -38,7 +40,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 throw new Error ("존재하지 않는 이메일")
             }
 
-            const passwordMatch = comparePassword(credentials.password as string, user.hashedPassword)
+            const passwordMatch = comparePassword(credentials.password as string, user.hashedPassword as string)
 
             if (!passwordMatch) {
                 throw new Error ("비밀번호 틀림")
@@ -51,5 +53,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session : {
     strategy: "jwt"
   },
+  jwt: {
+    encode: async ({token, secret}) => {
+        return jwt.sign(token as jwt.JwtPayload, secret as string)
+    },
+    decode: async ({token, secret}) => {
+        return jwt.verify(token as string, secret as string) as JWT
+    }
+  }
   
 })

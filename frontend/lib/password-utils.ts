@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 
-export function soltAndHashPassword(password: string): string {
+export function saltAndHashPassword(password: string): string {
     const salt = 10;
     const hash = bcrypt.hashSync(password, salt)
 
